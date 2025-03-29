@@ -1,0 +1,584 @@
+openapi: 3.0.0
+servers:
+  - url: https://api.unlayer.com/v2
+    description: Unlayer Cloud API
+info:
+  description: >
+    # Introduction
+
+    Welcome to the Unlayer REST API documentation. Our API enables you to
+    programmatically access and manipulate email templates, designs, and other
+    Unlayer resources.
+
+
+    # Authentication
+
+    The Unlayer API uses Basic Authentication. All requests require you to
+    authenticate using a Unlayer Project API Key as the `username` with an empty
+    string as the `password`:
+
+
+    ```curl
+
+    curl -u YOUR_API_KEY: -X GET https://api.unlayer.com/v2/templates
+
+    ```
+
+
+    All API calls must use HTTPS. Any calls made using HTTP will return an
+    appropriate error code.
+
+
+    ## Get your API Key
+
+
+    Follow these steps to get your API key:
+
+    1. Log in to the [Developer Console](https://console.unlayer.com/)
+
+    2. Create a Project
+
+    3. Find your API key in Project > Settings
+
+
+
+
+    ```
+
+    Authorization: Basic BASE64-ENCODED-API-KEY
+
+    ```
+
+
+
+
+    ## Basic Authentication
+
+    If you need to, you may construct and send basic auth headers yourself. To
+    do this you need to perform the following steps:
+
+
+    1. Get the API Key
+
+    2. Build a string in the form of `APIKey:Password` where Password will
+    always be empty. For example, if your API Key is `XAyAztva4`, you will just
+    add a `:` at the end. `XAyAztva4:`
+
+    3. Base64 encode the string
+
+    4. Supply an `Authorization` header with content `Basic` followed by the
+    encoded string. For example, the string `XAyAztva4:` encodes to
+    `WEF5QXp0dmE0Og==` in base64. Here's how the request would look:
+
+
+    ```curl
+      curl -D- \
+        -X GET \
+        -H "Authorization: Basic WEF5QXp0dmE0Og==" \
+        "https://api.unlayer.com/v2/templates"
+    ```
+
+
+    # Errors
+
+    All API requests will receive a standard HTTP response code.
+
+
+    ### Response Ranges
+
+    - 2xx -- Successful Request
+
+    - 4xx -- Failed Request (Client error)
+
+    - 5xx -- Failed Request (Server error)
+
+
+    # Versioning
+
+
+    This API is versioned. The current version is `2.0`.
+  version: 2
+  title: Unlayer Cloud API
+  x-logo:
+    url: /img/logo.png
+    altText: Unlayer logo
+x-tagGroups:
+  - name: Endpoints
+    tags:
+      - /templates
+      - /export
+tags:
+  - name: /templates
+    description: Manage email templates
+  - name: /export
+    description: >
+      You can use Unlayer's Cloud API to generate HTML, Image, PDF or ZIP file
+      of your templates or designs.
+
+
+      The Cloud API helps you take care these common use-cases:
+
+
+      - **Retrieving the HTML**: This is useful if you do not store the HTML, or
+      need to retrieve the latest HTML for a design.
+
+      - **Generating a Image**: This is useful to show thumbnails or previews of
+      designs to users.
+
+      - **Generating a PDF**: You can use this to export a design in PDF format.
+
+      - **Generating a ZIP**: This will export a design as a ZIP file that will
+      include their html and images.
+paths:
+  /export/html:
+    post:
+      tags:
+        - /export
+      summary: /export/html
+      description: |
+        **POST** `https://api.unlayer.com/v2/export/html`
+
+        Export a design to HTML format with various options
+      operationId: exportHtml
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                design:
+                  type: object
+                  description: The design JSON to export
+                displayMode:
+                  type: string
+                  enum:
+                    - email
+                    - web
+                    - popup
+                  description: The display mode of the design
+                mergeTags:
+                  type: object
+                  description: Values to replace merge tags in the design
+                customJS:
+                  type: array
+                  description: URLs to your custom JS to support custom tools
+                  items:
+                    type: string
+              required:
+                - design
+                - displayMode
+      responses:
+        '200':
+          description: HTML export successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      html:
+                        type: string
+                        description: The exported HTML
+                      chunks:
+                        type: object
+                        description: HTML chunks for custom layout
+                        properties:
+                          body:
+                            type: string
+                            description: The body part of the HTML
+                          css:
+                            type: string
+                            description: The CSS required for the design
+                          js:
+                            type: string
+                            description: The JS required for the design
+                          fonts:
+                            type: array
+                            description: Web fonts used in the design
+                            items:
+                              type: string
+      security:
+        - basicAuth: []
+  /export/image:
+    post:
+      tags:
+        - /export
+      summary: /export/image
+      description: |
+        **POST** `https://api.unlayer.com/v2/export/image`
+
+        Export a design to image format (PNG)
+      operationId: exportImage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                design:
+                  type: object
+                  description: The design JSON to export
+                displayMode:
+                  type: string
+                  enum:
+                    - email
+                    - web
+                    - popup
+                  description: The display mode of the design
+                mergeTags:
+                  type: object
+                  description: Values to replace merge tags in the design
+                customJS:
+                  type: array
+                  description: URLs to your custom JS to support custom tools
+                  items:
+                    type: string
+                fullPage:
+                  type: boolean
+                  description: Generate image of the full page.
+                  default: true
+              required:
+                - design
+                - displayMode
+      responses:
+        '200':
+          description: Image export successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      url:
+                        type: string
+                        description: URL of the exported image
+      security:
+        - basicAuth: []
+  /export/pdf:
+    post:
+      tags:
+        - /export
+      summary: /export/pdf
+      description: |
+        **POST** `https://api.unlayer.com/v2/export/pdf`
+
+        Export a design to PDF format
+      operationId: exportPdf
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                design:
+                  type: object
+                  description: The design JSON to export
+                displayMode:
+                  type: string
+                  enum:
+                    - email
+                    - web
+                    - popup
+                  description: The display mode of the design
+                mergeTags:
+                  type: object
+                  description: Values to replace merge tags in the design
+                customJS:
+                  type: array
+                  description: URLs to your custom JS to support custom tools
+                  items:
+                    type: string
+              required:
+                - design
+                - displayMode
+      responses:
+        '200':
+          description: PDF export successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      url:
+                        type: string
+                        description: URL of the exported PDF
+      security:
+        - basicAuth: []
+  /export/zip:
+    post:
+      tags:
+        - /export
+      summary: /export/zip
+      description: |
+        **POST** `https://api.unlayer.com/v2/export/zip`
+
+        Export a design as a ZIP archive containing all assets
+      operationId: exportZip
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                design:
+                  type: object
+                  description: The design JSON to export
+                displayMode:
+                  type: string
+                  enum:
+                    - email
+                    - web
+                    - popup
+                  description: The display mode of the design
+                mergeTags:
+                  type: object
+                  description: Values to replace merge tags in the design
+                customJS:
+                  type: array
+                  description: URLs to your custom JS to support custom tools
+                  items:
+                    type: string
+              required:
+                - design
+                - displayMode
+      responses:
+        '200':
+          description: ZIP export successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      url:
+                        type: string
+                        description: URL of the exported ZIP archive
+      security:
+        - basicAuth: []
+  /templates:
+    get:
+      tags:
+        - /templates
+      summary: /templates
+      description: |
+        **GET** `https://api.unlayer.com/v2/templates`
+
+        Get a list of available templates
+      operationId: listTemplates
+      parameters:
+        - name: page
+          in: query
+          description: Current page
+          required: false
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: perPage
+          in: query
+          description: Number of templates to fetch per page
+          required: false
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+        - name: includeDesign
+          in: query
+          description: >-
+            Should the result include design json or not. This is not
+            recommended as it could result in long response. To disable, pass 0.
+          required: false
+          schema:
+            type: integer
+            enum:
+              - 0
+              - 1
+            default: 1
+      responses:
+        '200':
+          description: Templates retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: Template ID
+                        name:
+                          type: string
+                          description: Template name
+                        design:
+                          type: object
+                          description: >-
+                            Template design JSON (only included if
+                            includeDesign=1)
+                        displayMode:
+                          type: string
+                          description: Template display mode
+                        updatedAt:
+                          type: string
+                          description: Template updated at
+                        createdAt:
+                          type: string
+                          description: Template created at
+      security:
+        - basicAuth: []
+  /templates/{id}:
+    get:
+      tags:
+        - /templates
+      summary: /templates/:id
+      description: |
+        **GET** `https://api.unlayer.com/v2/templates/{id}`
+
+        Get a specific template by ID
+      operationId: getTemplate
+      parameters:
+        - name: id
+          in: path
+          description: ID of the template to retrieve
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Template retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        description: Template ID
+                      name:
+                        type: string
+                        description: Template name
+                      design:
+                        type: object
+                        description: Template design JSON
+                      displayMode:
+                        type: string
+                        description: Template display mode
+                      updatedAt:
+                        type: string
+                        description: Template updated at
+                      createdAt:
+                        type: string
+                        description: Template created at
+  /templates/{id}/render:
+    get:
+      tags:
+        - templates
+      summary: /templates/:id/render
+      description: |
+        **GET** `https://api.unlayer.com/v2/templates/{id}/render`
+
+        Render a template HTML
+      operationId: renderTemplateHtml
+      parameters:
+        - name: id
+          in: path
+          description: ID of the template to retrieve
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Template HTML retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      html:
+                        type: string
+                        description: HTML
+                      chunks:
+                        type: object
+                        description: Chunks
+                        properties:
+                          body:
+                            type: string
+                            description: Body
+                          css:
+                            type: string
+                            description: CSS
+                          js:
+                            type: string
+                            description: JS
+                          fonts:
+                            type: array
+                            description: Fonts
+                          tags:
+                            type: array
+                            description: Tags
+                      amp:
+                        type: object
+                        description: AMP
+                        properties:
+                          enabled:
+                            type: boolean
+                            description: Enabled
+                          format:
+                            type: string
+                            description: Format
+                          validation:
+                            type: object
+                            description: Validation
+                            properties:
+                              status:
+                                type: string
+                                description: Status
+                              errors:
+                                type: array
+                                description: Errors
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+      description: >
+        Use your API key as Basic Authentication.
+
+        The API key must be Base64 encoded and included in the Authorization
+        header.
